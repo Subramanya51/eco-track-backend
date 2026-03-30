@@ -28,7 +28,8 @@ public class PickupController {
                 request.getLongitude()
         );
 
-        return ResponseEntity.ok(pickup.getId());
+//        return ResponseEntity.ok(pickup.getId());
+        return ResponseEntity.ok(String.valueOf(pickup.getId()));
     }
     @PutMapping("/update-status")
     public ResponseEntity<Void> updateStatus(@RequestBody PickupStatusUpdateDTO request)

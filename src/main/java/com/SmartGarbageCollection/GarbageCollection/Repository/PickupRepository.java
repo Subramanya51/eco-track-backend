@@ -19,6 +19,7 @@ import com.SmartGarbageCollection.GarbageCollection.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface PickupRepository extends JpaRepository<Pickup, String> {
@@ -33,4 +34,8 @@ public interface PickupRepository extends JpaRepository<Pickup, String> {
     long countByRequestDateAndStatus(LocalDate date, PickupStatus status);
 
     long countByRequestDateAndStatusIsNull(LocalDate date); // ACTIVE
+    Optional<Pickup> findTopByUserAndStatusInOrderByIdDesc(
+            User user,
+            List<PickupStatus> statuses
+    );
 }

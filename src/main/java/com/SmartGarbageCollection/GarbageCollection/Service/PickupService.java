@@ -14,6 +14,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.SmartGarbageCollection.GarbageCollection.DTO.FirebasePickupDTO;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,30 +27,65 @@ public class PickupService {
     private UserRepository userRepository;
 
     // ✅ CREATE PICKUP
-    public Pickup createPickup(String userName, LocalDate date, Double lat, Double lon)
-    {
+//    public Pickup createPickup(String userName, LocalDate date, Double lat, Double lon)
+//    {
+//
+//        User user = userRepository.findByUserName(userName)
+//                .orElseThrow(() -> new RuntimeException("User not found"));
+//
+//
+//        // 🔒 Prevent multiple active pickups
+//        Optional<Pickup> activePickup =
+//                pickupRepository.findTopByUserAndStatusIsNullOrderByIdDesc(user);
+//
+//        if (activePickup.isPresent()) {
+//            throw new RuntimeException("Previous pickup not completed");
+//        }
+//
+//        Pickup pickup = new Pickup();
+//        pickup.setUser(user);
+//        pickup.setRequestDate(date);
+//        pickup.setLatitude(lat);
+//        pickup.setLongitude(lon);
+//        pickup.setStatus(null); // initially empty
+//
+//        Pickup savedPickup= pickupRepository.save(pickup);
+//        pushToFirebase(savedPickup);
+//        return savedPickup;
+//    }
+    public Pickup createPickup(String userName, LocalDate date, Double lat, Double lon) {
 
         User user = userRepository.findByUserName(userName)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-
-        // 🔒 Prevent multiple active pickups
+        // 🔒 Check active pickups (NOT COMPLETED)
         Optional<Pickup> activePickup =
-                pickupRepository.findTopByUserAndStatusIsNullOrderByIdDesc(user);
+                pickupRepository.findTopByUserAndStatusInOrderByIdDesc(
+                        user,
+                        List.of(PickupStatus.REQUESTED, PickupStatus.IN_PROGRESS)
+                );
 
         if (activePickup.isPresent()) {
-            throw new RuntimeException("Previous pickup not completed");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Previous pickup not completed"
+            );
         }
 
+        // ✅ Create new pickup
         Pickup pickup = new Pickup();
         pickup.setUser(user);
         pickup.setRequestDate(date);
         pickup.setLatitude(lat);
         pickup.setLongitude(lon);
-        pickup.setStatus(null); // initially empty
 
-        Pickup savedPickup= pickupRepository.save(pickup);
+        // 🔥 IMPORTANT FIX
+        pickup.setStatus(PickupStatus.REQUESTED);
+
+        Pickup savedPickup = pickupRepository.save(pickup);
+
         pushToFirebase(savedPickup);
+
         return savedPickup;
     }
 

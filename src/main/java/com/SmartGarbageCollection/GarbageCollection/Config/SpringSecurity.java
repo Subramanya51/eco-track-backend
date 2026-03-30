@@ -106,7 +106,7 @@ public class SpringSecurity {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/public", "/auth/**", "/health/**","/public/**").permitAll()
+                        .requestMatchers( "/auth/**", "/health/**","/public/**").permitAll()
 
                         // Role-based access
                         .requestMatchers("/pickup/**").hasRole("RESIDENT")
